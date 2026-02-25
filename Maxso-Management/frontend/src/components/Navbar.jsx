@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { logout } from '../features/authSlice'
+import { logoutUser } from '../features/authSlice';
 
 const Navbar = () => {
   const dispatch = useDispatch()
   const user = useSelector((state) => state.auth.user)
 
   const handleClick = () => {
-    dispatch(logout())
+    dispatch(logoutUser());
   }
 
   return (
@@ -22,7 +22,7 @@ const Navbar = () => {
               <span>{user.email}</span>
               <button onClick={handleClick}>Log out</button>
             </div>
-            
+
           )}
           {!user && (
             <div>

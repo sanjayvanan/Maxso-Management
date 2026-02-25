@@ -1,13 +1,12 @@
-const express = require('express')
+const express = require('express');
 const rateLimit = require('express-rate-limit');
 
-// controller functions
-const { loginUser, signupUser } = require('../controllers/userController')
+// Controller functions
+const { loginUser, signupUser, getMe, logoutUser, getAllUsers, getReferralHistory } = require('../controllers/userController');
+const { requireAuth, requireAdmin } = require('../middleware/requireAuth');
 
-const router = express.Router()
+const router = express.Router();
 
-
-// Limit to 5 requests per 15 minutes for auth routes
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
   max: 20, 
@@ -16,11 +15,16 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Public Auth routes
+router.post('/login', authLimiter, loginUser);
+router.post('/signup', authLimiter, signupUser);
+router.post('/logout', logoutUser);
 
-// login route
-router.post('/login',authLimiter, loginUser)
+// Protected route to verify session on refresh
+router.get('/me', requireAuth, getMe);
 
-// signup route
-router.post('/signup',authLimiter, signupUser)
+// Admin routes
+router.get('/admin/users', requireAuth, requireAdmin, getAllUsers);
+router.get('/admin/referrals', requireAuth, requireAdmin, getReferralHistory);
 
-module.exports = router
+module.exports = router;
