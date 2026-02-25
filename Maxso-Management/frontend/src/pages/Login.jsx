@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useDispatch, useSelector } from 'react-redux'
 import { loginUser } from '../features/authSlice'
+import styles from '../styles'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -16,28 +17,51 @@ const Login = () => {
   }
 
   return (
-    <form className="login" onSubmit={handleSubmit}>
-      <h3>Log In</h3>
-      
-      <label>Email address:</label>
-      <input 
-        type="email" 
-        onChange={(e) => setEmail(e.target.value)} 
-        value={email} 
-        required
-      />
-      
-      <label>Password:</label>
-      <input 
-        type="password" 
-        onChange={(e) => setPassword(e.target.value)} 
-        value={password} 
-        required
-      />
+    <div className={styles.authContainer}>
+      <form
+        className={styles.authCard}
+        onSubmit={handleSubmit}
+      >
+        <h3 className={styles.formHeading}>Log In</h3>
 
-      <button disabled={isLoading}>Log in</button>
-      {error && <div className="error">{error}</div>}
-    </form>
+        <div className="space-y-4">
+          <div>
+            <label className={styles.label}>Email address</label>
+            <input
+              className={`${styles.inputBase} ${error ? styles.inputError : styles.inputNormal}`}
+              type="email"
+              onChange={(e) => setEmail(e.target.value)}
+              value={email}
+              required
+            />
+          </div>
+
+          <div>
+            <label className={styles.label}>Password</label>
+            <input
+              className={`${styles.inputBase} ${error ? styles.inputError : styles.inputNormal}`}
+              type="password"
+              onChange={(e) => setPassword(e.target.value)}
+              value={password}
+              required
+            />
+          </div>
+        </div>
+
+        <button
+          className={styles.primaryButton}
+          disabled={isLoading}
+        >
+          {isLoading ? 'Logging in...' : 'Log in'}
+        </button>
+
+        {error && (
+          <div className={styles.errorContainer}>
+            {error}
+          </div>
+        )}
+      </form>
+    </div>
   )
 }
 

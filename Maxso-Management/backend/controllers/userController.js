@@ -23,7 +23,7 @@ const signupUser = async (req, res, next) => {
 
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
-    
+
     const referral_code = generateReferralCode();
     let referred_by_id = null;
 
@@ -48,7 +48,7 @@ const signupUser = async (req, res, next) => {
 
     const user = result.rows[0];
     const token = createToken(user.id);
-    
+
     res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Lax', maxAge: 3 * 24 * 60 * 60 * 1000 });
     res.status(200).json({ email, name, role: user.role, referral_code });
   } catch (error) {
@@ -83,7 +83,7 @@ const getMe = async (req, res, next) => {
   try {
     const result = await db.query('SELECT email, name, role, referral_code FROM "User" WHERE id = $1', [req.user.id]);
     if (result.rows.length === 0) throw new Error('User not found');
-    
+
     res.status(200).json(result.rows[0]);
   } catch (error) {
     res.status(401);
@@ -99,7 +99,7 @@ const logoutUser = (req, res) => {
 
 const getAllUsers = async (req, res, next) => {
   try {
-    const result = await db.query('SELECT id, name, email, role, referral_code, referral_count FROM "User" ORDER BY id ASC');
+    const result = await db.query('SELECT id, name, email, role, phone_number, wallet_address, created_at, referral_code, referral_count FROM "User" ORDER BY id ASC');
     res.status(200).json(result.rows);
   } catch (error) {
     res.status(500);
@@ -117,4 +117,62 @@ const getReferralHistory = async (req, res, next) => {
   }
 };
 
-module.exports = { signupUser, loginUser, getMe, logoutUser, getAllUsers, getReferralHistory };
+// --- ADMIN ACTIONS ---
+
+const deleteUser = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    // Basic protection to prevent admin from deleting themselves
+    if (req.user.id === parseInt(id, 10)) {
+      throw new Error("You cannot delete your own admin account.");
+    }
+    await db.query('DELETE FROM "User" WHERE id = $1', [id]);
+    res.status(200).json({ message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(400);
+    next(error);
+  }
+};
+
+const loginAsUser = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const result = await db.query('SELECT * FROM "User" WHERE id = $1', [id]);
+    const user = result.rows[0];
+
+    if (!user) throw new Error('User not found');
+
+    // Create a new token for the target user to simulate their session
+    const token = createToken(user.id);
+
+    // Replace current cookie with impersonated user's cookie
+    res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Lax', maxAge: 3 * 24 * 60 * 60 * 1000 });
+
+    res.status(200).json({ email: user.email, name: user.name, role: user.role, referral_code: user.referral_code, message: 'Impersonation active' });
+  } catch (error) {
+    res.status(400);
+    next(error);
+  }
+};
+
+const updateUser = async (req, res, next) => {
+  const { id } = req.params;
+  const { name, phone_number, email, role, wallet_address } = req.body;
+
+  try {
+    // Simple direct update
+    const result = await db.query(
+      'UPDATE "User" SET name = $1, phone_number = $2, email = $3, role = $4, wallet_address = $5 WHERE id = $6 RETURNING id, name, email, phone_number, role, wallet_address, referral_code, created_at, referral_count',
+      [name, phone_number, email, role, wallet_address, id]
+    );
+
+    if (result.rows.length === 0) throw new Error('User not found or update failed');
+
+    res.status(200).json({ message: 'User updated successfully', user: result.rows[0] });
+  } catch (error) {
+    res.status(400);
+    next(error);
+  }
+};
+
+module.exports = { signupUser, loginUser, getMe, logoutUser, getAllUsers, getReferralHistory, deleteUser, loginAsUser, updateUser };
