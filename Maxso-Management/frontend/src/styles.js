@@ -1,9 +1,15 @@
 const styles = {
     // Layouts
-    appWrapper: "min-h-screen bg-[#0d0d0d] text-gray-300 font-sans flex",
-    sidebarContainer: "w-64 bg-gradient-to-b from-[#8b0000] to-[#2b0000] min-h-screen flex flex-col text-white transition-all duration-300 shadow-[4px_0_24px_rgba(0,0,0,0.5)] z-20",
-    mainContent: "flex-1 flex flex-col min-w-0 transition-all duration-300 bg-[#0d0d0d]",
-    pageContainer: "p-6",
+    appWrapper: "min-h-screen bg-[#0d0d0d] text-gray-300 font-sans flex relative overflow-hidden",
+
+    // Sidebar Container: Fixed on mobile (drawer), relative on desktop
+    sidebarContainer: "fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-[#8b0000] to-[#2b0000] min-h-screen flex flex-col text-white transition-all duration-300 shadow-[4px_0_24px_rgba(0,0,0,0.5)] z-40 md:relative",
+
+    // Mobile Overlay when sidebar is open
+    sidebarOverlay: "fixed inset-0 bg-black/60 z-30 md:hidden transition-opacity duration-300",
+
+    mainContent: "flex-1 flex flex-col min-w-0 transition-all duration-300 bg-[#0d0d0d] h-screen overflow-y-auto",
+    pageContainer: "p-4 md:p-6",
 
     authContainer: "flex items-center justify-center min-h-screen bg-[#0d0d0d] w-full",
     authCard: "w-full max-w-md bg-[#111111] border border-[#2a2a2a] rounded-xl shadow-2xl p-8 space-y-6",
@@ -38,13 +44,13 @@ const styles = {
     navContainer: "h-20 px-6 flex items-center justify-between",
     navLeft: "flex items-center gap-4",
     navHamburger: "text-[#b30000] p-2 hover:bg-[#1a1a1a] rounded cursor-pointer transition-colors",
-    navHeaderTitleBox: "flex flex-col justify-center",
-    navHeaderTitle: "text-2xl font-bold text-[#b30000] tracking-wide",
+    navHeaderTitleBox: "flex flex-col justify-center min-w-0 flex-1 flex",
+    navHeaderTitle: "text-xl md:text-2xl font-bold text-[#b30000] tracking-wide truncate",
     navHeaderSubtitle: "text-xs text-white font-bold flex items-center gap-1",
-    navRight: "flex items-center gap-6",
-    walletBox: "flex flex-col items-end justify-center",
-    walletLabel: "text-xs text-white",
-    walletAmount: "text-sm font-bold text-[#b30000]",
+    navRight: "flex items-center gap-4 md:gap-6",
+    walletBox: "flex flex-col items-end justify-center hidden sm:flex truncate",
+    walletLabel: "text-[10px] md:text-xs text-gray-400 capitalize",
+    walletAmount: "text-sm md:text-base font-bold text-[#b30000]",
     avatarBox: "relative",
     avatarImage: "w-10 h-10 rounded-full border-2 border-[#b30000] cursor-pointer object-cover",
     dropdownMenu: "absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl py-1 z-50",
@@ -99,7 +105,33 @@ const styles = {
     umRoleAdmin: "bg-purple-900/30 text-purple-400 border-purple-800/50",
     umRoleUser: "bg-green-900/30 text-green-400 border-green-800/50",
     umLoading: "p-8 text-center text-gray-500",
-    umError: "p-8 text-center text-red-500 font-semibold"
+    umError: "p-8 text-center text-red-500 font-semibold",
+
+    // Dashboard specific
+    dashUsersBlock: "bg-gradient-to-br from-[#800000] to-[#3a0000] rounded-xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-2xl relative overflow-hidden",
+    dashUserCard: "bg-[#0f0a0a] border border-[#221010] transform -skew-x-6 px-10 py-6 flex flex-col items-center justify-center flex-1 w-full shadow-lg relative min-w-[140px]",
+    dashUserCardContent: "transform skew-x-6 flex flex-col items-center",
+    dashUserLabel: "text-[10px] md:text-xs font-bold text-white uppercase tracking-widest mb-2",
+    dashUserValue: "text-3xl font-black text-white",
+
+    dashSectionTitle: "text-sm font-bold text-white uppercase tracking-widest mb-4",
+
+    dashWalletContainer: "grid grid-cols-1 md:grid-cols-3 gap-6",
+    dashWalletCard: "bg-black border border-red-900/40 rounded-xl p-6 flex flex-col shadow-[0_4px_24px_rgba(139,0,0,0.1)]",
+    dashWalletHeader: "flex justify-between items-start mb-6",
+    dashWalletLabel: "text-xs font-bold text-white capitalize",
+    dashWalletIcon: "text-white w-5 h-5",
+    dashWalletValue: "text-2xl font-black text-white mt-auto",
+
+    dashOverviewContainer: "grid grid-cols-1 lg:grid-cols-2 gap-8",
+    dashListCard: "bg-black border border-[#1a1a1a] rounded-xl p-0 flex flex-col overflow-hidden",
+    dashListItem: "p-6 flex items-center justify-between border-b border-[#222] last:border-b-0",
+    dashListLeft: "flex items-center gap-4",
+    dashListIconBox: "w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center border border-[#333]",
+    dashListIcon: "text-gray-400 w-5 h-5",
+    dashListText: "flex flex-col",
+    dashListLabel: "text-[10px] uppercase font-bold text-gray-400 tracking-wider",
+    dashListValue: "text-sm font-bold text-white mt-1"
 };
 
 export default styles;

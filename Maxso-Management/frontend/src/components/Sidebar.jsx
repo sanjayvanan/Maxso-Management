@@ -1,12 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
 import styles from '../styles';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen }) => {
     const location = useLocation();
     const currentPath = location.pathname;
 
     return (
-        <aside className={styles.sidebarContainer}>
+        <aside className={`${styles.sidebarContainer} ${isOpen ? 'translate-x-0 md:ml-0' : '-translate-x-full md:-ml-64'}`}>
             <div className={styles.sidebarLogoWrapper}>
                 <div className={styles.sidebarLogo}>
                     m

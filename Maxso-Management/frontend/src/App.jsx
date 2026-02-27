@@ -15,7 +15,21 @@ import styles from './styles'
 function App() {
   const dispatch = useDispatch();
   const { user, isAuthReady } = useSelector((state) => state.auth);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // Default to closed on mobile, open on desktop
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
+
+  // Handle window resize to auto-adjust sidebar
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Check the user's session cookie on initial app load
   useEffect(() => {
@@ -36,7 +50,18 @@ function App() {
       {user ? (
         // Authenticated Dashboard Layout
         <div className={styles.appWrapper}>
+
+          {/* Mobile Sidebar Overlay */}
+          {isSidebarOpen && (
+            <div
+              className={styles.sidebarOverlay}
+              onClick={() => setIsSidebarOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+
           <Sidebar isOpen={isSidebarOpen} />
+
           <div className={styles.mainContent}>
             <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
             <div className={styles.pageContainer}>

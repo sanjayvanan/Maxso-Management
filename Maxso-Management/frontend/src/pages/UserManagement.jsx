@@ -5,6 +5,7 @@ import styles from '../styles';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
+    const [totalUsers, setTotalUsers] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { user } = useSelector((state) => state.auth);
@@ -13,20 +14,42 @@ const UserManagement = () => {
 
     // Search & Pagination State
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
 
+    // Handle Debounce Search typing
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setCurrentPage(1); // Reset to page 1 on new search
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
+
+    // Fetch Users from API
     useEffect(() => {
         const fetchUsers = async () => {
+            setLoading(true);
             try {
-                const response = await fetch(`${API_URL}/api/user/admin/users`, {
+                const query = new URLSearchParams({
+                    page: currentPage,
+                    limit: rowsPerPage,
+                    search: debouncedSearch
+                }).toString();
+
+                const response = await fetch(`${API_URL}/api/user/admin/users?${query}`, {
                     credentials: 'include',
                 });
                 const data = await response.json();
                 if (!response.ok) {
                     throw new Error(data.error || 'Failed to fetch users');
                 }
-                setUsers(data);
+
+                setUsers(data.users || []);
+                setTotalUsers(data.total || 0);
+                setTotalPages(data.totalPages || 1);
                 setLoading(false);
             } catch (err) {
                 setError(err.message);
@@ -40,40 +63,9 @@ const UserManagement = () => {
             setError('Access denied. Admins only.');
             setLoading(false);
         }
-    }, [user]);
+    }, [user, currentPage, rowsPerPage, debouncedSearch]);
 
-    // Derived State for Filtering & Pagination
-    const filteredUsers = useMemo(() => {
-        return users.filter(u => {
-            const searchLower = searchTerm.toLowerCase();
-            return (
-                (u.name && u.name.toLowerCase().includes(searchLower)) ||
-                (u.email && u.email.toLowerCase().includes(searchLower)) ||
-                (u.phone_number && u.phone_number.toLowerCase().includes(searchLower)) ||
-                (u.referral_code && u.referral_code.toLowerCase().includes(searchLower))
-            );
-        });
-    }, [users, searchTerm]);
-
-    const totalPages = Math.ceil(filteredUsers.length / rowsPerPage) || 1;
-
-    // Ensure current page is valid when filtering changes total pages
-    useEffect(() => {
-        if (currentPage > totalPages) {
-            setCurrentPage(1);
-        }
-    }, [filteredUsers.length, totalPages, currentPage]);
-
-    const paginatedUsers = useMemo(() => {
-        const start = (currentPage - 1) * rowsPerPage;
-        return filteredUsers.slice(start, start + rowsPerPage);
-    }, [filteredUsers, currentPage, rowsPerPage]);
-
-    const handleSearch = (e) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(1);
-    };
-
+    const handleSearch = (e) => setSearchTerm(e.target.value);
     const handlePrevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
     const handleNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
 
@@ -199,7 +191,7 @@ const UserManagement = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {paginatedUsers.map((u, index) => (
+                        {users.map((u, index) => (
                             <tr key={u.id} className={styles.umTr}>
                                 <td className={styles.umTdBold}>{(currentPage - 1) * rowsPerPage + index + 1}</td>
                                 <td className={styles.umTd}>{u.name || (u.email.split('@')[0])}</td>
@@ -254,7 +246,7 @@ const UserManagement = () => {
                                 </td>
                             </tr>
                         ))}
-                        {paginatedUsers.length === 0 && (
+                        {users.length === 0 && (
                             <tr>
                                 <td colSpan="10" className="px-6 py-8 text-center text-gray-500">
                                     No users found.

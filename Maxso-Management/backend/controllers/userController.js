@@ -99,8 +99,47 @@ const logoutUser = (req, res) => {
 
 const getAllUsers = async (req, res, next) => {
   try {
-    const result = await db.query('SELECT id, name, email, role, phone_number, wallet_address, created_at, referral_code, referral_count FROM "User" ORDER BY id ASC');
-    res.status(200).json(result.rows);
+    const { page = 1, limit = 10, search = '' } = req.query;
+
+    // Parse pagination parameters
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const offset = (pageNum - 1) * limitNum;
+
+    // Base query components
+    let baseQuery = 'FROM "User"';
+    let countQuery = `SELECT COUNT(*) ${baseQuery}`;
+    let dataQuery = `SELECT id, name, email, role, phone_number, wallet_address, created_at, referral_code, referral_count ${baseQuery}`;
+
+    const queryParams = [];
+
+    // Append search logic if provided
+    if (search.trim() !== '') {
+      const searchPattern = `%${search.trim()}%`;
+      const searchCondition = ` WHERE name ILIKE $1 OR email ILIKE $1 OR phone_number ILIKE $1 OR referral_code ILIKE $1`;
+
+      countQuery += searchCondition;
+      dataQuery += searchCondition;
+      queryParams.push(searchPattern);
+    }
+
+    // Fetch total count for pagination metadata
+    const countResult = await db.query(countQuery, queryParams);
+    const totalCount = parseInt(countResult.rows[0].count, 10);
+
+    // Append Order, Limit, & Offset for the actual data
+    dataQuery += ` ORDER BY id ASC LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`;
+    queryParams.push(limitNum, offset);
+
+    // Fetch the paginated rows
+    const result = await db.query(dataQuery, queryParams);
+
+    res.status(200).json({
+      users: result.rows,
+      total: totalCount,
+      currentPage: pageNum,
+      totalPages: Math.ceil(totalCount / limitNum) || 1
+    });
   } catch (error) {
     res.status(500);
     next(error);
